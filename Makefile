@@ -1,5 +1,5 @@
-SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c
-OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o
+SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c tools.c
+OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o tools.o
 EXEC = ContentServer MirrorServer MirrorInitiator
 CC	= gcc
 FLAGS   = -g -c -Wall -lpthreads
@@ -18,10 +18,13 @@ MirrorServer: MirrorServer.o
 MirrorServer.o: MirrorServer.c
 	$(CC) $(FLAGS) $?
 
-MirrorInitiator: MirrorInitiator.o
+MirrorInitiator: MirrorInitiator.o tools.o
 	$(CC) -g $? -o $@
 
 MirrorInitiator.o: MirrorInitiator.c
+	$(CC) $(FLAGS) $?
+
+tools.o: tools.c
 	$(CC) $(FLAGS) $?
 
 clean:

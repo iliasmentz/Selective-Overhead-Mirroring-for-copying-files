@@ -6,23 +6,26 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-void read_args(int argc, char * argv[], int * port, struct hostent ** MirrorServer);
+#include "tools.h"
+
+void read_args(int argc, char * argv[], int * port, char ** MirrorServerAddress);
 
 int main(int argc, char * argv[])
 {
   int port=-1;
-  struct hostent *MirrorServer = malloc(sizeof(struct hostent));
-  read_args(argc, argv, &port, &MirrorServer );
+  struct hostent * MirrorServer;
+  char * MirrorServerAddress = NULL;
+  read_args(argc, argv, &port, &MirrorServerAddress);
+  MirrorServer = gethostbyname(MirrorServerAddress);
   printf("%s \n", MirrorServer->h_name);
-  free(MirrorServer);
+  free(MirrorServerAddress);
   exit(EXIT_SUCCESS);
 }
 
 
-void read_args(int argc, char * argv[], int * port, struct hostent ** MirrorServer)
+void read_args(int argc, char * argv[], int * port, char ** MirrorServerAddress)
 {
   int i;
-  struct in_addr myaddress;
   for (i = 1; i < argc;)
   {
     if(strcmp(argv[i], "-p") == 0)
@@ -32,20 +35,12 @@ void read_args(int argc, char * argv[], int * port, struct hostent ** MirrorServ
     }
     else if(strcmp(argv[i], "-n") == 0)
     {
-      if((*MirrorServer = gethostbyname(argv[i+1])) != NULL)
-      {
-        i+=2;
-      }
-      else{
-        printf("Its IP\n" );
-        inet_aton(argv[i+1], &myaddress);
-        if ((*MirrorServer = gethostbyaddr((const char*)&myaddress, sizeof(myaddress), AF_INET)) == NULL)
-        {
-          printf("Could not resolved Name/Address:  %s\n",argv[i+1]);
-          exit(EXIT_FAILURE);
-        }
-        i+=2;
-      }
+      *MirrorServerAddress = copystring(argv[i+1]);
+      i+=2;
+    }
+    else if(strcmp(argv[i], "-s")==0)
+    {
+      
     }
   }
 
