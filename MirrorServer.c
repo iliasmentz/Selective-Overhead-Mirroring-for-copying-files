@@ -3,13 +3,20 @@
 #include <string.h>
 #include <pthread.h>
 
+#include "DataStructures.h"
+
+#define BUFFERSIZE 1024
+
 void read_args(int argc, char * argv[], int * port, char ** dirname, int * threadnum);
-char buffer[1024];
+
+ServerBuffer * buffer[BUFFERSIZE];
+int counter=0;
 pthread_mutex_t mutex;
-int consumer =0;
-int producer =0;
-pthread_cond_t consumers;
-pthread_cond_t producer;
+int worker =0;
+int manager =0;
+pthread_cond_t workers;
+pthread_cond_t managers;
+int windowsmanagersfinished=0;
 
 int main(int argc, char * argv[])
 {
@@ -61,24 +68,74 @@ void read_args(int argc, char * argv[], int * port, char ** dirname, int * threa
 acquire_work()
 {
   lock(mutex);
-  while(consumer || producer || (strlen(buffer)==0))
-    wait(consumers, mutex);
-  consumers ++;
+  while(worker || manager || (counter == 0))
+    wait(workers, mutex);
+  workers ++;
   unlock(mutex);
 }
 
 release_work()
 {
   lock(mutex);
-  consumers--;
-  signal(consumer);
-  signal(producer);
+  workers--;
+  signal(managers);
+  signal(worker);
   unlock(mutex);
 }
 
 (void *) work (void *)
 {
-  acquire_work();
+  while(windowsmanagersfinished==1)
+  {
+    acquire_work();
+    ServerBuffer * temp = buffer[counter];
+    counter--;
+    buffer[counter] = NULL;
+    release_work();
+    /*
+      work
+    */
+    deleteServerBuffer(temp);
+    free(temp);
+    temp = NULL;
+  }
+}
 
-  release_work();
+
+acquire_manager()
+{
+  lock(mutex);
+  while (worker || manager || (counter==BUFFERSIZE))
+    wait(managers, mutex);
+  manager++;
+  unlock(mutex);
+}
+
+release_manager()
+{
+  lock(mutex);
+  manager--;
+  signal(workers);
+  signal(managers);
+  unlock(managers);
+}
+
+(void *) windowManager(void *)
+{
+  /*connection, send request*/
+  while(/*read is valid*/)
+  {
+
+    ServerBuffer * sb;
+    acquire_manager();
+    sb = createServerBuffer(/*what i read*/, /*ServerName*/, /*Port*/);
+    buffer[counter] = sb;
+    counter++;
+    release_manager();
+    sb = NULL;
+
+  }
+  acquire_manager();
+  windowsmanagersfinished++;
+  release_manager();
 }
