@@ -1,3 +1,5 @@
 *.o
 ContentServer
 MirrorServer
+MirrorInitiator
+test
