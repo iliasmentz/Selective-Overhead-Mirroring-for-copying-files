@@ -11,3 +11,9 @@ char * copystring(char * string)
 	return s;
 
 }
+
+void perror_exit(char *message)
+{
+    perror(message);
+    exit(EXIT_FAILURE);
+}
