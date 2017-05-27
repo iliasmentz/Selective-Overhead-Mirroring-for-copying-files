@@ -6,18 +6,18 @@ typedef struct ContentServer{
   int Port;
   char * dirorfile;
   int delay;
-} ContentServer;
+}ContentServer;
 
 typedef struct ServerBuffer{
   char * dirorfilename;
   char * ContentServerAddress;
   int port;
-} ServerBuffer;
+}ServerBuffer;
 
-void createContentServer(char * addr, int p, char * file, int d );
+ContentServer * createContentServer(char * addr, int p, char * file, int d );
 void deleteContentServer(ContentServer * cs);
 
 ServerBuffer * createServerBuffer(char * dirorfile, char * ServerAddress, int p);
-void deleteServerBuffer(ServerBuffer * sb)
+void deleteServerBuffer(ServerBuffer * sb);
 
 #endif
