@@ -6,14 +6,8 @@ FLAGS   = -g -c -Wall
 
 All: $(EXEC)
 
-test: test.o tools.o DataStructures.o
+ContentServer: ContentServer.o tools.o
 	$(CC) -g $? -o $@ -lpthread
-
-ContentServer: ContentServer.o
-	$(CC) -g $? -o $@
-
-test.o: test.c
-	$(CC) $(FLAGS) $?
 
 ContentServer.o: ContentServer.c
 	$(CC) $(FLAGS) $?

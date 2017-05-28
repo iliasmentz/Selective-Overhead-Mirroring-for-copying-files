@@ -1,17 +1,82 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <sys/types.h>			/* For sockets */
+#include <sys/socket.h>			/* For sockets */
+#include <netinet/in.h>			/* For Internet sockets */
+#include <netdb.h>			/* For gethostbyname */
+
+#include "tools.h"
 
 void read_args(int argc, char * argv[], int * port, char ** dirorfile);
+void * ContentChild(void * ptr);
+
+char * dirorfile=NULL;
 
 int main(int argc, char * argv[])
 {
   int port=-1;
-  char * dirorfile=NULL;
+
   read_args(argc, argv, &port, &dirorfile);
   printf("%s \n", dirorfile );
+
+  unsigned int serverlen, clientlen;	/* Server - client variables */
+	struct sockaddr_in server, client;
+	struct sockaddr *serverptr, *clientptr;
+  int sock, newsock;
+
+  if ((sock = socket(PF_INET, SOCK_STREAM, 0)) == -1){	/* Create socket */
+    perror_exit("socket");
+  }
+  server.sin_family = AF_INET;	/* Internet domain */
+	server.sin_addr.s_addr = htonl(INADDR_ANY);
+	server.sin_port = htons(port);	/* The given port */
+	serverptr = (struct sockaddr *) &server;
+	serverlen = sizeof server;
+
+  if (bind(sock, serverptr, serverlen) < 0){
+    perror_exit("bind");
+  }
+
+  if (listen(sock, 100) < 0){
+    perror_exit("listen");
+  }
+  clientptr = (struct sockaddr *) &client;
+  clientlen = sizeof(client);
+  pthread_t service;
+  while((newsock = accept(sock, clientptr, &clientlen)) != -1){
+    pthread_create(&service, 0, ContentChild, &newsock);
+    //close(newsock);
+  }
+
+
   free(dirorfile);
   exit(EXIT_SUCCESS);
+}
+
+void * ContentChild(void * ptr)
+{
+  int socket;
+  socket = *(int *)ptr;
+  char *request;
+  read_data(socket, &request);
+  printf("%s\n",request);
+  char * type = strtok(request, " ");
+  if(strcmp(type, "LIST")==0)
+  {
+    write_data(socket, "LIST");
+    printf("Got list request\n");
+  }
+  else if(strcmp(type, "FETCH")==0)
+  {
+    write_data(socket, "FETCH");
+  }
+  free(request);
+  close(socket);
+  pthread_detach(pthread_self());
+  pthread_exit((void *)0);
 }
 
 void read_args(int argc, char * argv[], int * port, char ** dirorfile)
