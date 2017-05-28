@@ -4,4 +4,8 @@
 char * copystring(char * string);
 void perror_exit(char *message);
 
+int read_data (int fd, char **buffer);
+int write_data ( int fd, char* message );
+
+
 #endif

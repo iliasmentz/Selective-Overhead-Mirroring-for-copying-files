@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>                         /* sockets */
+#include <strings.h>		/* For bcopy */
+#include <unistd.h>
+#include <sys/types.h>  /* sockets */
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 
 #include "tools.h"
@@ -14,43 +15,55 @@ void read_args(int argc, char * argv[], int * port, char ** MirrorServerAddress,
 int main(int argc, char * argv[])
 {
   int port=-1;
-  struct hostent * MirrorServer;
   char * MirrorServerAddress = NULL;
   char ** ContentServers;
   int count=0;
 
-  MirrorServer = gethostbyname(MirrorServerAddress);
+  read_args(argc, argv, &port, &MirrorServerAddress, &ContentServers, &count);
 
   int i;
   printf("Count = %d \n", count);
   for(i=0; i<count; i++)
     printf("Content Server %d: %s \n", i, ContentServers[i]);
 
-  struct sockaddr_in myaddr;  /* build our address here */
-  int	c, lsock, csock;  /* listening and client sockets */
-  FILE	*sock_fp;             /* stream for socket IO */
-  /* Step 1: Get a socket */
-  if ((sock = socket(PF_INET, SOCK_STREAM, 0)) == -1 )
-      perror_exit( "socket" );
-  /* Step 2: lookup server's address and connect there */
-  if ((hp = gethostbyname(MirrorServerAddress)) == NULL) {
-    herror("gethostbyname");
-    exit(1);
-  }
-  printf("Hostname: %s \n", MirrorServer->h_name);
-  memcpy(&servadd.sin_addr, hp->h_addr, hp->h_length);
-  servadd.sin_port = htons(PORTNUM); /* set port number */
-  servadd.sin_family = AF_INET ;     /* set socket type */
-  if (connect(sock, (struct sockaddr*) &servadd, sizeof(servadd)) !=0)
-      perror_exit( "connect" );
+  int sock;
+  unsigned int serverlen;
+  struct sockaddr_in server;
+  struct sockaddr *serverptr;
+  struct hostent *rem;
 
-  write(sock, )
+  if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0){
+    perror_exit("socket");
+  }
+  if ((rem = gethostbyname(MirrorServerAddress)) == NULL){	/* Find server address */
+    perror_exit("gethostbyname");
+  }
+  server.sin_family = AF_INET;
+  bcopy((char *) rem -> h_addr, (char *) &server.sin_addr, rem -> h_length);
+  server.sin_port = htons(port);
+  serverptr = (struct sockaddr *) &server;
+  serverlen = sizeof server;
+  if (connect(sock, serverptr, serverlen) < 0){
+    perror_exit("connect");
+  }
+
+  char buffer[100];
+  sprintf(buffer,"%d", count);
+  write_data(sock, buffer);
+  for(i=0; i<count; i++)
+    write_data(sock, ContentServers[i]);
+
+  char * answer;
+  read_data(sock, &answer);
+  printf("Message is %s\n", answer);
+  free(answer);
   for(i=0; i< count; i++)
   {
     free(ContentServers[i]);
   }
   free(ContentServers);
   free(MirrorServerAddress);
+  close(sock);
   exit(EXIT_SUCCESS);
 }
 

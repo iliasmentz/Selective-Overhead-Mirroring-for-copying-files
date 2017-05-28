@@ -1,6 +1,6 @@
-SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c tools.c test.c DataStructures.c
-OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o tools.o test.o DataStructures.o
-EXEC = ContentServer MirrorInitiator
+SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c MirrorManager.c Worker.c tools.c test.c DataStructures.c
+OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o MirrorManager.o Worker.o tools.o test.o DataStructures.o
+EXEC = ContentServer MirrorInitiator MirrorServer
 CC	= gcc
 FLAGS   = -g -c -Wall
 
@@ -18,16 +18,23 @@ test.o: test.c
 ContentServer.o: ContentServer.c
 	$(CC) $(FLAGS) $?
 
-MirrorServer: MirrorServer.o
+MirrorInitiator: MirrorInitiator.o tools.o
 	$(CC) -g $? -o $@
+
+MirrorServer: MirrorServer.o MirrorManager.o Worker.o DataStructures.o tools.o
+	$(CC) -g $? -o $@ -lpthread
 
 MirrorServer.o: MirrorServer.c
 	$(CC) $(FLAGS) $?
 
-MirrorInitiator: MirrorInitiator.o tools.o
-	$(CC) -g $? -o $@
 
 MirrorInitiator.o: MirrorInitiator.c
+	$(CC) $(FLAGS) $?
+
+MirrorManager.o: MirrorManager.c
+	$(CC) $(FLAGS) $?
+
+Worker.o: Worker.c
 	$(CC) $(FLAGS) $?
 
 DataStructures.o: DataStructures.c
