@@ -42,26 +42,52 @@ void * mirrorManager(void *ptr)
   if (connect(sock, serverptr, serverlen) < 0){
     perror_exit("connect");
   }
+
   char localbuffer[127];
   sprintf(localbuffer, "LIST %d", contentserver->delay);
   write_data(sock, localbuffer);
+
   char * answer;
   read_data(sock, &answer);
+  int count = atoi(answer);
   printf("Answer is %s\n", answer );
 
-
-  /*connection, send request*/
+  char ** list;
+  list = malloc(count *sizeof(char*));
   int i;
-  for(i=0 ; i <5 ; i++)
+  int serverbuffers =0;
+  printf("Dirrorfile: %s\n", contentserver->dirorfile);
+  for(i=0; i<count; i++)
   {
+    read_data(sock, &list[i]);
+    if(strstr(list[i], contentserver->dirorfile)!=NULL)
+      serverbuffers++;
+  }
+  int j;
+  ServerBuffer ** sb;
+  sb = malloc(serverbuffers*sizeof(ServerBuffer*));
+  for(i=0; i<count; i++)
+  {
+    if(strstr(list[i], contentserver->dirorfile)!=NULL)
+    {
+      printf("%s\n", list[i] );
+      sb[j] = createServerBuffer(list[i], contentserver->Address, contentserver->Port);
+      j++;
+    }
 
-    ServerBuffer * sb;
+  }
+  printf("%d\n", serverbuffers);
+  for(i =0; i<count; i++)
+    free(list[i]);
+  free(list);
+  /*connection, send request*/
+  for(i=0 ; i<serverbuffers ; i++)
+  {
     acquire_manager();
-    sb = createServerBuffer("aaaaa", "bbbbb", 420);
-    buffer[counter] = sb;
+    buffer[counter] = sb[i];
     counter++;
-    //printf("Wrote on buffer\n" );
-    //printf("Buffer size is: %d\n", counter );
+    printf("Wrote on buffer\n" );
+    printf("Buffer size is: %d\n", counter );
     sb = NULL;
     release_manager();
   }

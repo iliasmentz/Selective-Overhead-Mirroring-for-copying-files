@@ -66,8 +66,28 @@ void * ContentChild(void * ptr)
   char * type = strtok(request, " ");
   if(strcmp(type, "LIST")==0)
   {
-    write_data(socket, "LIST");
-    printf("Got list request\n");
+    char command [1024];
+    sprintf(command, "find %s -type f", dirorfile);
+    FILE * fp, *temp;
+    fp = popen(command, "r");
+    sprintf(command, "%s | wc -l", command);
+    temp = popen(command, "r");
+    char *line = NULL;
+    size_t len = 0;
+    int count = 0;
+    if(getline(&line, &len, temp)!=0)
+      count =atoi(line);
+    printf("Count is %d \n", count);
+    write_data(socket, line);
+    char * pos;
+    while( getline(&line, &len, fp) !=-1)
+    {
+      printf("%s", line);
+      if ((pos=strchr(line, '\n')) != NULL)
+	    		*pos = '\0';	//we don't want to include the \n in our strings
+      write_data(socket, line);
+    }
+    // printf("Got list request\n");
   }
   else if(strcmp(type, "FETCH")==0)
   {

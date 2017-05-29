@@ -15,11 +15,11 @@ char * copystring(char * string)
 }
 
 int read_data (int fd, char ** buffer){/* Read formated data */
-	char temp;
+	char temp[32];
 	int i = 0, length = 0;
-	if ( read ( fd, &temp, 1 ) < 0 )	/* Get length of string */
+	if ( read ( fd, temp, 32 ) < 0 )	/* Get length of string */
 		exit (-3);
-	length = temp;
+	length = atoi(temp);
 	*buffer= malloc(length*sizeof(length));
 	if (( i+= read (fd, *buffer, length ))<0)
 			exit (-3);
@@ -27,10 +27,11 @@ int read_data (int fd, char ** buffer){/* Read formated data */
 }
 
 int write_data ( int fd, char* message ){/* Write formated data */
-	char temp; int length = 0;
+	char temp[32]; int length = 0;
+	memset(temp, '\0', 32);
 	length = strlen(message) + 1;	/* Find length of string */
-	temp = length;
-	if( write (fd, &temp, 1) < 0 )	/* Send length first */
+	sprintf(temp, "%d", length);
+	if( write (fd, temp, 32) < 0 )	/* Send length first */
 		exit (-2);
 	if( write (fd, message, length) < 0 )	/* Send string */
 		exit (-2);
