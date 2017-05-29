@@ -15,7 +15,7 @@ extern int m ;
 extern pthread_cond_t managers_cond;
 extern pthread_cond_t workers_cond;
 extern int windowsmanagersfinished;
-
+extern ContentServer ** contentserver;
 void acquire_work();
 void release_work();
 void * work (void *ptr);

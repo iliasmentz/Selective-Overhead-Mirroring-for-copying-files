@@ -14,13 +14,7 @@
 
 void * mirrorManager(void *ptr)
 {
-  char * str = (char *)ptr;
-  char * addr = strtok(str, ":");
-  int port = atoi(strtok(NULL, ":"));
-  char * dirorfile = strtok(NULL, ":");
-  int delay = atoi(strtok(NULL, ":"));
-  ContentServer * contentserver;
-  contentserver = createContentServer(addr, port, dirorfile, delay);
+  ContentServer * cs = (ContentServer *)ptr;
 
   int sock;
   unsigned int serverlen;
@@ -31,12 +25,12 @@ void * mirrorManager(void *ptr)
   if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0){
     perror_exit("socket");
   }
-  if ((rem = gethostbyname(contentserver->Address)) == NULL){	/* Find server address */
+  if ((rem = gethostbyname(cs->Address)) == NULL){	/* Find server address */
     perror_exit("gethostbyname");
   }
   server.sin_family = AF_INET;
   bcopy((char *) rem -> h_addr, (char *) &server.sin_addr, rem -> h_length);
-  server.sin_port = htons(contentserver->Port);
+  server.sin_port = htons(cs->Port);
   serverptr = (struct sockaddr *) &server;
   serverlen = sizeof server;
   if (connect(sock, serverptr, serverlen) < 0){
@@ -44,7 +38,7 @@ void * mirrorManager(void *ptr)
   }
 
   char localbuffer[127];
-  sprintf(localbuffer, "LIST %d", contentserver->delay);
+  sprintf(localbuffer, "LIST %d %d", cs->id,cs->delay);
   write_data(sock, localbuffer);
 
   char * answer;
@@ -56,11 +50,11 @@ void * mirrorManager(void *ptr)
   list = malloc(count *sizeof(char*));
   int i;
   int serverbuffers =0;
-  printf("Dirrorfile: %s\n", contentserver->dirorfile);
+  printf("Dirrorfile: %s\n", cs->dirorfile);
   for(i=0; i<count; i++)
   {
     read_data(sock, &list[i]);
-    if(strstr(list[i], contentserver->dirorfile)!=NULL)
+    if(strstr(list[i], cs->dirorfile)!=NULL)
       serverbuffers++;
   }
   printf("serverbuffers is %d\n", serverbuffers);
@@ -69,10 +63,10 @@ void * mirrorManager(void *ptr)
   sb = malloc(serverbuffers*sizeof(ServerBuffer*));
   for(i=0; i<count; i++)
   {
-    if(strstr(list[i], contentserver->dirorfile)!=NULL)
+    if(strstr(list[i], cs->dirorfile)!=NULL)
     {
-      //printf("%s %s %d\n", list[i], contentserver->Address, contentserver->Port );
-      sb[j] = createServerBuffer(list[i], contentserver->Address, contentserver->Port);
+      //printf("%s %s %d\n", list[i], cs->Address, cs->Port );
+      sb[j] = createServerBuffer(list[i], cs->Address, cs->Port, cs->id);
       j++;
     }
 
@@ -96,9 +90,7 @@ void * mirrorManager(void *ptr)
   acquire_manager();
   windowsmanagersfinished++;
   release_manager();
-
-  deleteContentServer(contentserver);
-  free(contentserver);
+  deleteContentServer(cs);
   free(sb);
   pthread_exit((void *)0);
 }

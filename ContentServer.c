@@ -15,6 +15,11 @@ void * ContentChild(void * ptr);
 
 char * dirorfile=NULL;
 
+typedef struct delayID{
+  int ID;
+  int delay;
+}delayID;
+
 int main(int argc, char * argv[])
 {
   int port=-1;
@@ -87,6 +92,8 @@ void * ContentChild(void * ptr)
 	    		*pos = '\0';	//we don't want to include the \n in our strings
       write_data(socket, line);
     }
+    pclose(temp);
+    pclose(fp);
     // printf("Got list request\n");
   }
   else if(strcmp(type, "FETCH")==0)

@@ -6,7 +6,7 @@
 #include "tools.h"
 
 
-ContentServer * createContentServer(char * addr, int p, char * file, int d )
+ContentServer * createContentServer(char * addr, int p, char * file, int d, int ID )
 {
   ContentServer * cs;
   cs = malloc(sizeof(ContentServer));
@@ -15,6 +15,7 @@ ContentServer * createContentServer(char * addr, int p, char * file, int d )
   cs->Port = p;
   cs->dirorfile = copystring(file);
   cs->delay = d;
+  cs->id = ID;
   return cs;
 }
 
@@ -24,13 +25,14 @@ void deleteContentServer(ContentServer * cs)
  free(cs->dirorfile);
 }
 
-ServerBuffer * createServerBuffer(char * dirorfile, char * ServerAddress, int p)
+ServerBuffer * createServerBuffer(char * dirorfile, char * ServerAddress, int p, int ID )
 {
   ServerBuffer * sb;
   sb = malloc(sizeof(ServerBuffer));
   sb->dirorfilename = copystring(dirorfile);
   sb->ContentServerAddress = copystring(ServerAddress);
   sb->port = p;
+  sb->id =ID;
   return sb;
 }
 

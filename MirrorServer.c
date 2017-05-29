@@ -25,6 +25,7 @@ int m =0;
 pthread_cond_t managers_cond;
 pthread_cond_t workers_cond;
 int windowsmanagersfinished=0;
+ContentServer ** contentserver;
 
 int main(int argc, char * argv[])
 {
@@ -79,11 +80,18 @@ int main(int argc, char * argv[])
   m = count;
   pthread_t manager[m];
   char ** ContentServers = malloc(count*sizeof(char *));
+  contentserver = malloc(count*sizeof(ContentServer *));
   int i;
   for(i =0 ; i < m; i++)
   {
     read_data(newsock, &ContentServers[i]);
-    pthread_create(&manager[i], 0  , mirrorManager, (void *)ContentServers[i]);
+    char * addr = strtok(ContentServers[i], ":");
+    int port = atoi(strtok(NULL, ":"));
+    char * dirorfile = strtok(NULL, ":");
+    int delay = atoi(strtok(NULL, ":"));
+
+    contentserver[i] = createContentServer(addr, port, dirorfile, delay, i);
+    pthread_create(&manager[i], 0  , mirrorManager, contentserver[i]);
     printf("Server %d is : %s\n", i, ContentServers[i]);
   }
   for(i=0; i < w; i++)
@@ -103,7 +111,11 @@ int main(int argc, char * argv[])
   pthread_cond_destroy(&workers_cond);
   pthread_mutex_destroy(&mutex);
   for(i = 0 ; i <count; i++)
+  {
+    free(contentserver[i]);
     free(ContentServers[i]);
+  }
+  free(contentserver);
   free(ContentServers);
   free(buffer);
   free(dirname);
