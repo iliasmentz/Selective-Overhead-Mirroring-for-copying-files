@@ -14,14 +14,17 @@ char * copystring(char * string)
 
 }
 
-int read_data (int fd, char ** buffer){/* Read formated data */
+int read_data (int fd, char ** string){/* Read formated data */
 	char temp[32];
 	int i = 0, length = 0;
 	if ( read ( fd, temp, 32 ) < 0 )	/* Get length of string */
 		exit (-3);
 	length = atoi(temp);
-	*buffer= malloc(length*sizeof(length));
-	if (( i+= read (fd, *buffer, length ))<0)
+	char * buffer;
+	*string= malloc(length*sizeof(length));
+	buffer = *string ;
+	while ( i < length )	/* Read $length chars */
+		if ( i < ( i+= read (fd, &buffer[i], length - i)))
 			exit (-3);
 	return i;	/* Return size of string */
 }

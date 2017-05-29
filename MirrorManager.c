@@ -51,7 +51,7 @@ void * mirrorManager(void *ptr)
   read_data(sock, &answer);
   int count = atoi(answer);
   printf("Answer is %s\n", answer );
-
+  free(answer);
   char ** list;
   list = malloc(count *sizeof(char*));
   int i;
@@ -63,14 +63,15 @@ void * mirrorManager(void *ptr)
     if(strstr(list[i], contentserver->dirorfile)!=NULL)
       serverbuffers++;
   }
-  int j;
+  printf("serverbuffers is %d\n", serverbuffers);
+  int j=0;
   ServerBuffer ** sb;
   sb = malloc(serverbuffers*sizeof(ServerBuffer*));
   for(i=0; i<count; i++)
   {
     if(strstr(list[i], contentserver->dirorfile)!=NULL)
     {
-      printf("%s\n", list[i] );
+      //printf("%s %s %d\n", list[i], contentserver->Address, contentserver->Port );
       sb[j] = createServerBuffer(list[i], contentserver->Address, contentserver->Port);
       j++;
     }
@@ -86,9 +87,9 @@ void * mirrorManager(void *ptr)
     acquire_manager();
     buffer[counter] = sb[i];
     counter++;
-    printf("Wrote on buffer\n" );
-    printf("Buffer size is: %d\n", counter );
-    sb = NULL;
+    //printf("dirorfile %s, address %s, port %d \n", sb[i]->dirorfilename, sb[i]->ContentServerAddress, sb[i]->port);
+    //printf("Wrote on buffer\n" );
+    //printf("Buffer size is: %d\n", counter );
     release_manager();
   }
 
@@ -98,6 +99,7 @@ void * mirrorManager(void *ptr)
 
   deleteContentServer(contentserver);
   free(contentserver);
+  free(sb);
   pthread_exit((void *)0);
 }
 

@@ -2,7 +2,7 @@ SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c MirrorManager.c Worker
 OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o MirrorManager.o Worker.o tools.o test.o DataStructures.o
 EXEC = ContentServer MirrorInitiator MirrorServer
 CC	= gcc
-FLAGS   = -g -c -Wall
+FLAGS   = -g -c
 
 All: $(EXEC)
 
