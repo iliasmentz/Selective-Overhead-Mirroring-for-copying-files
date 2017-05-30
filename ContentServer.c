@@ -9,16 +9,23 @@
 #include <netdb.h>			/* For gethostbyname */
 
 #include "tools.h"
+#include "ContentServer.h"
 
 void read_args(int argc, char * argv[], int * port, char ** dirorfile);
 void * ContentChild(void * ptr);
 
 char * dirorfile=NULL;
 
-typedef struct delayID{
-  int ID;
-  int delay;
-}delayID;
+
+
+pthread_mutex_t mutex;
+int counter =0;
+delayID * delays;
+int buffersize =2;
+int reader = 0;
+int writer = 0;
+pthread_cond_t readers_cond;
+pthread_cond_t writers_cond;
 
 int main(int argc, char * argv[])
 {
@@ -28,8 +35,15 @@ int main(int argc, char * argv[])
   int size = 256;
   int port=-1;
 
+  delays = malloc(buffersize*sizeof(delayID));
+
+
   read_args(argc, argv, &port, &dirorfile);
   printf("%s \n", dirorfile );
+
+  pthread_mutex_init(&mutex, 0);
+  pthread_cond_init(&writers_cond, 0);
+  pthread_cond_init(&readers_cond, 0);
 
   unsigned int serverlen, clientlen;	/* Server - client variables */
 	struct sockaddr_in server, client;
@@ -66,6 +80,9 @@ int main(int argc, char * argv[])
       connections = realloc(connections, size*sizeof(int));
     }
   }
+  pthread_cond_destroy(&writers_cond);
+  pthread_cond_destroy(&readers_cond);
+  pthread_mutex_destroy(&mutex);
   free(connections);
   free(dirorfile);
   exit(EXIT_SUCCESS);
@@ -81,6 +98,18 @@ void * ContentChild(void * ptr)
   char * type = strtok(request, " ");
   if(strcmp(type, "LIST")==0)
   {
+
+    writer_lock();
+    if (buffersize == counter)
+    {
+      buffersize *=2;
+      delays = realloc(delays, buffersize*sizeof(delayID));
+    }
+    delays[counter].ID = atoi(strtok(NULL, " "));
+    delays[counter].delay = atoi(strtok(NULL, " "));
+    counter++;
+    writer_release();
+
     char command [1024];
     char command2 [1024];
     sprintf(command, "find %s -type f", dirorfile);
@@ -109,13 +138,28 @@ void * ContentChild(void * ptr)
   }
   else if(strcmp(type, "FETCH")==0)
   {
-    write_data(socket, "FETCH");
+    int i;
+    int id = atoi(strtok(NULL, " "));
+    reader_lock();
+    int delay;
+    for(i =0; i < counter; i++)
+    {
+      if (delays[i].ID == id)
+       break;
+    }
+    delay = delays[i].delay;
+    reader_release();
+    char answer[32];
+    sprintf(answer, "Delay is %d", delay);
+    write_data(socket, answer);
   }
   free(request);
   close(socket);
   pthread_detach(pthread_self());
   pthread_exit((void *)0);
 }
+
+
 
 void read_args(int argc, char * argv[], int * port, char ** dirorfile)
 {

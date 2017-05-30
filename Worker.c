@@ -70,15 +70,18 @@ void * work (void *ptr)
     if (connect(sock, serverptr, serverlen) < 0){
       perror_exit("connect");
     }
-    //char * message;
-    //message = malloc((strlen(temp->dirorfilename)+7)*sizeof(char));
-    // sprintf(message, "FETCH %s", temp->dirorfilename);
+    char * message;
+    char idstring[32];
+    sprintf(idstring, "%d", temp->id);
+    message = malloc((strlen(temp->dirorfilename)+strlen(idstring)+8)*sizeof(char));
+    sprintf(message, "FETCH %s %s", idstring, temp->dirorfilename);
     // printf("Sending %s\n", message );
-    write_data(sock, "FETCH HI ILIAS");
+    write_data(sock, message);
     char * answer;
     read_data(sock, &answer);
     printf("Answer is: %s\n", answer);
     free(answer);
+    free(message);
     deleteServerBuffer(temp);
     free(temp);
     temp = NULL;

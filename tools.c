@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "tools.h"
 
@@ -46,4 +50,30 @@ void perror_exit(char *message)
 {
     perror(message);
     exit(EXIT_FAILURE);
+}
+
+char * CreateFolder(char * foldername)
+{
+	struct tm *info;
+
+	struct stat st = {0};
+	/*check if the folder already exists*/
+	if (stat(foldername, &st) == -1) {
+			/*create the folder*/
+			mkdir(foldername, 0777);
+	}
+	return foldername;
+}
+
+int  CreateOutputFile(int jobid, char * folder)
+{/*create and open the output file and return the file descriptor*/
+		char job_id[25];
+		sprintf(job_id, "%d", jobid);
+		char * outpath;
+		outpath = malloc((strlen(folder)+strlen(job_id)+strlen("/stdout_")+1)*sizeof(char));
+		sprintf(outpath, "%s/stdout_%s", folder, job_id);
+		int fd;
+		fd = open(outpath, O_APPEND|O_WRONLY|O_CREAT, 0666);
+		free(outpath);
+		return fd;
 }

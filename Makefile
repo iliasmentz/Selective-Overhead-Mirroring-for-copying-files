@@ -1,12 +1,12 @@
-SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c MirrorManager.c Worker.c tools.c test.c DataStructures.c
-OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o MirrorManager.o Worker.o tools.o test.o DataStructures.o
+SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c MirrorManager.c Worker.c ReaderWriter.c tools.c test.c DataStructures.c
+OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o MirrorManager.o Worker.o ReaderWriter.o tools.o test.o DataStructures.o
 EXEC = ContentServer MirrorInitiator MirrorServer
 CC	= gcc
 FLAGS   = -g -c
 
 All: $(EXEC)
 
-ContentServer: ContentServer.o tools.o
+ContentServer: ContentServer.o ReaderWriter.o tools.o
 	$(CC) -g $? -o $@ -lpthread
 
 ContentServer.o: ContentServer.c
@@ -29,6 +29,9 @@ MirrorManager.o: MirrorManager.c
 	$(CC) $(FLAGS) $?
 
 Worker.o: Worker.c
+	$(CC) $(FLAGS) $?
+
+ReaderWriter.o: ReaderWriter.c
 	$(CC) $(FLAGS) $?
 
 DataStructures.o: DataStructures.c

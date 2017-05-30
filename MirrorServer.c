@@ -35,6 +35,7 @@ int main(int argc, char * argv[])
 
   read_args(argc, argv, &port, &dirname, &threadnum);
   printf("%s \n", dirname );
+  CreateFolder(dirname);
   w=threadnum;
   pthread_t worker[w];
   pthread_mutex_init(&mutex, 0);

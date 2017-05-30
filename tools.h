@@ -6,6 +6,7 @@ void perror_exit(char *message);
 
 int read_data (int fd, char **buffer);
 int write_data ( int fd, char* message );
+char * CreateFolder(char * foldername);
 
 
 #endif
