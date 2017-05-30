@@ -34,6 +34,7 @@ int write_data ( int fd, char* message ){/* Write formated data */
 	memset(temp, '\0', 32);
 	length = strlen(message) + 1;	/* Find length of string */
 	sprintf(temp, "%d", length);
+
 	if( write (fd, temp, 32) < 0 )	/* Send length first */
 		exit (-2);
 	if( write (fd, message, length) < 0 )	/* Send string */

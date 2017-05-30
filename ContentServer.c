@@ -22,6 +22,10 @@ typedef struct delayID{
 
 int main(int argc, char * argv[])
 {
+  int * connections;
+  int i=0;
+  connections = malloc(256*sizeof(int));
+  int size = 256;
   int port=-1;
 
   read_args(argc, argv, &port, &dirorfile);
@@ -52,11 +56,17 @@ int main(int argc, char * argv[])
   clientlen = sizeof(client);
   pthread_t service;
   while((newsock = accept(sock, clientptr, &clientlen)) != -1){
-    pthread_create(&service, 0, ContentChild, &newsock);
+    connections[i] = newsock;
+    pthread_create(&service, 0, ContentChild, &connections[i]);
     //close(newsock);
+    i++;
+    if (i == size)
+    {
+      size*=2;
+      connections = realloc(connections, size*sizeof(int));
+    }
   }
-
-
+  free(connections);
   free(dirorfile);
   exit(EXIT_SUCCESS);
 }
@@ -67,16 +77,17 @@ void * ContentChild(void * ptr)
   socket = *(int *)ptr;
   char *request;
   read_data(socket, &request);
-  printf("%s\n",request);
+  printf("%s\n", request );
   char * type = strtok(request, " ");
   if(strcmp(type, "LIST")==0)
   {
     char command [1024];
+    char command2 [1024];
     sprintf(command, "find %s -type f", dirorfile);
     FILE * fp, *temp;
     fp = popen(command, "r");
-    sprintf(command, "%s | wc -l", command);
-    temp = popen(command, "r");
+    sprintf(command2, "%s | wc -l", command);
+    temp = popen(command2, "r");
     char *line = NULL;
     size_t len = 0;
     int count = 0;
@@ -87,7 +98,7 @@ void * ContentChild(void * ptr)
     char * pos;
     while( getline(&line, &len, fp) !=-1)
     {
-      printf("%s", line);
+      //printf("%s", line);
       if ((pos=strchr(line, '\n')) != NULL)
 	    		*pos = '\0';	//we don't want to include the \n in our strings
       write_data(socket, line);
