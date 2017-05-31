@@ -58,7 +58,7 @@ void * mirrorManager(void *ptr)
     if(strstr(list[i], cs->dirorfile)!=NULL)
       serverbuffers++;
   }
-  printf("serverbuffers is %d\n", serverbuffers);
+  printf("I will take %d items from %s %s\n", serverbuffers, cs->Address, cs->dirorfile);
   int j=0;
   ServerBuffer ** sb;
   sb = malloc(serverbuffers*sizeof(ServerBuffer*));
@@ -72,7 +72,6 @@ void * mirrorManager(void *ptr)
     }
 
   }
-  printf("%d\n", serverbuffers);
   for(i =0; i<count; i++)
     free(list[i]);
   free(list);

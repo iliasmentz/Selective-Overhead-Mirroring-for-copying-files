@@ -18,6 +18,12 @@ char * copystring(char * string)
 
 }
 
+void removeSubstring(char *s,const char *toremove)
+{
+  while( s=strstr(s,toremove) )
+    memmove(s,s+strlen(toremove),1+strlen(s+strlen(toremove)));
+}
+
 int read_data (int fd, char ** string){/* Read formated data */
 	char temp[32];
 	int i = 0, length = 0;
@@ -86,7 +92,7 @@ int  CreateFile(char * path)
 {/*create and open the output file and return the file descriptor*/
 
 		int fd;
-		fd = open(path, O_APPEND|O_WRONLY|O_CREAT, 0777);
+		fd = open(path, O_APPEND|O_WRONLY|O_CREAT|O_TRUNC, 0777);
 		return fd;
 }
 

@@ -55,7 +55,9 @@ int main(int argc, char * argv[])
 
   char * answer;
   read_data(sock, &answer);
-  printf("Message is %s\n", answer);
+  long FilesTransfered = atoi(strtok(answer, " "));
+  long long BytesTransfered = atoi(strtok(NULL, " "));
+  printf("FilesTransfered %ld, BytesTransfered %lld\n", FilesTransfered, BytesTransfered );
   free(answer);
   for(i=0; i< count; i++)
   {

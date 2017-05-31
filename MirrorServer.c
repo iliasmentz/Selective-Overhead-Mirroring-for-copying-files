@@ -17,16 +17,21 @@ void read_args(int argc, char * argv[], int * port, char ** dirname, int * threa
 
 ServerBuffer * buffer[BUFFERSIZE];
 pthread_mutex_t mutex;
+pthread_mutex_t mutex2;
 int counter=0;
 int worker =0;
 int manager =0;
 int w =0;
 int m =0;
+int workers_ended =0;
+pthread_cond_t allDone;
 pthread_cond_t managers_cond;
 pthread_cond_t workers_cond;
 int windowsmanagersfinished=0;
 ContentServer ** contentserver;
 char * dirname=NULL;
+long long BytesTransfered = 0;
+long FilesTransfered =0;
 
 int main(int argc, char * argv[])
 {
@@ -39,8 +44,10 @@ int main(int argc, char * argv[])
   w=threadnum;
   pthread_t worker[w];
   pthread_mutex_init(&mutex, 0);
+  pthread_mutex_init(&mutex2, 0);
   pthread_cond_init(&managers_cond, 0);
   pthread_cond_init(&workers_cond, 0);
+  pthread_cond_init(&allDone, 0);
 
   unsigned int serverlen, clientlen;	/* Server - client variables */
 	struct sockaddr_in server, client;
@@ -91,9 +98,9 @@ int main(int argc, char * argv[])
     int port = atoi(strtok(NULL, ":"));
     char * dirorfile = strtok(NULL, ":");
     int delay = atoi(strtok(NULL, ":"));
-    subfolder = malloc((strlen(dirorfile)+strlen(dirname)+2)*sizeof(char));
-    sprintf(subfolder, "%s/%s", dirname, dirorfile);
-    CreateFolder(subfolder);
+    //subfolder = malloc((strlen(dirorfile)+strlen(dirname)+2)*sizeof(char));
+    //sprintf(subfolder, "%s/%s", dirname, dirorfile);
+    //CreateFolder(subfolder);
 
     contentserver[i] = createContentServer(addr, port, dirorfile, delay, i);
     pthread_create(&manager[i], 0  , mirrorManager, contentserver[i]);
@@ -101,9 +108,6 @@ int main(int argc, char * argv[])
   }
   for(i=0; i < w; i++)
     pthread_create(&worker[i], 0  , work, 0);
-  write_data(newsock, "Ok");
-
-
 
   for(i=0; i < m; i++)
     pthread_join(manager[i], 0);
@@ -112,9 +116,16 @@ int main(int argc, char * argv[])
     pthread_join(worker[i], 0);
   printf("Workers finished!\n" );
 
+  char answer[1024];
+  sprintf(answer, "%ld %lld", FilesTransfered, BytesTransfered);
+  write_data(newsock, answer);
+
+  printf("Transfered %ld files and %lld bytes.\n", FilesTransfered, BytesTransfered );
+  pthread_cond_destroy(&allDone);
   pthread_cond_destroy(&managers_cond);
   pthread_cond_destroy(&workers_cond);
   pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&mutex2);
   for(i = 0 ; i <count; i++)
   {
     free(contentserver[i]);

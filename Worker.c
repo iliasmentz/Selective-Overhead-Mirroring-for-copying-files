@@ -12,17 +12,28 @@
 #include "DataStructures.h"
 #include "tools.h"
 
-void acquire_work()
+void acquire_work(int haswork)
 {
   pthread_mutex_lock(&mutex);
-  while(worker || manager || (counter == 0))
+  while(worker || manager || (counter == 0) )
   {
-    if((windowsmanagersfinished == m) && (counter==0))
+    if((windowsmanagersfinished == m) && (counter==0) && !haswork)
     {
       pthread_cond_signal(&workers_cond);
       pthread_mutex_unlock(&mutex);
+      pthread_mutex_lock(&mutex2);
+      workers_ended++;
+      printf("Workers: %d\n", workers_ended);
+      if(workers_ended < w)
+      {
+        pthread_cond_wait(&allDone, &mutex2);
+      }
+      pthread_cond_broadcast(&allDone);
+      pthread_mutex_unlock(&mutex2);
       pthread_exit(0);
     }
+    else if(counter ==0 && !worker && !manager && haswork)
+      break;
     pthread_cond_wait(&workers_cond, &mutex);
   }
   worker ++;
@@ -42,7 +53,7 @@ void * work (void *ptr)
 {
   while(windowsmanagersfinished<m || counter!=0)
   {
-    acquire_work();
+    acquire_work(0);
     counter--;
     ServerBuffer * temp = buffer[counter];
     buffer[counter] = NULL;
@@ -74,26 +85,32 @@ void * work (void *ptr)
     char idstring[32];
     sprintf(idstring, "%d", temp->id);
     message = malloc((strlen(temp->dirorfilename)+strlen(idstring)+8)*sizeof(char));
-    sprintf(message, "FETCH %s %s", idstring, temp->dirorfilename);
-    // printf("Sending %s\n", message );
+    sprintf(message, "FETCH %s %s", temp->dirorfilename, idstring);
+    //printf("Sending %s\n", message );
     temp->dirorfilename = replace_char(temp->dirorfilename, '/', '?');
     char * filename;
     filename = malloc((strlen(temp->dirorfilename)+strlen(dirname)+2)*sizeof(char));
     sprintf(filename, "%s/%s", dirname, temp->dirorfilename);
     int filedesc = CreateFile(filename);
-
+    free(filename);
     write_data(sock, message);
     char * answer;
-
+    int  total =0;
     int i;
     while((i=read_data(sock, &answer))>0)
     {
-      printf("i is: %d\n",i );
-
+      //printf("i is: %d\n",i );
+      total+=i;
       write(filedesc, answer, i);
       free(answer);
       answer = NULL;
     }
+
+    BytesTransfered+=total;
+    acquire_work(1);
+    FilesTransfered++;
+    release_work();
+
     close(filedesc);
     close(sock);
     free(message);

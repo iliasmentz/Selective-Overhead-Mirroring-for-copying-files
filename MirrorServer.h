@@ -7,7 +7,8 @@
 
 extern ServerBuffer * buffer[1024];
 extern pthread_mutex_t mutex;
-extern int counter; 
+extern pthread_mutex_t mutex2;
+extern int counter;
 extern int worker ;
 extern int manager;
 extern int w ;
@@ -17,8 +18,12 @@ extern pthread_cond_t workers_cond;
 extern int windowsmanagersfinished;
 extern ContentServer ** contentserver;
 extern char * dirname;
+extern int workers_ended;
+extern pthread_cond_t allDone;
+extern long long BytesTransfered;
+extern long FilesTransfered;
 
-void acquire_work();
+void acquire_work(int);
 void release_work();
 void * work (void *ptr);
 

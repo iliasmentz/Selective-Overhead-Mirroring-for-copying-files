@@ -97,9 +97,11 @@ void * ContentChild(void * ptr)
   int socket;
   socket = *(int *)ptr;
   char *request;
+  char *request2;
   read_data(socket, &request);
-  //printf("%s\n", request );
-  char * type = strtok(request, " ");
+  request2 = copystring(request);
+  printf("%s\n", request2 );
+  char * type = strtok(request2, " ");
   if(strcmp(type, "LIST")==0)
   {
 
@@ -133,7 +135,7 @@ void * ContentChild(void * ptr)
     while( getline(&line, &len, fp) !=-1)
     {
       substring = strstr(line, dirorfile);
-      printf("%s", substring);
+      //printf("Substring is: %s", substring);
       if ((pos=strchr(line, '\n')) != NULL)
 	    		*pos = '\0';	//we don't want to include the \n in our strings
       write_data(socket, line);
@@ -145,7 +147,13 @@ void * ContentChild(void * ptr)
   else if(strcmp(type, "FETCH")==0)
   {
     int i;
+    char * filename;
+    if((filename=strtok(NULL, " ")) == NULL){
+      perror_exit("strtok");
+    }
     int id = atoi(strtok(NULL, " "));
+    if(filename == NULL)
+      printf("NULL sto %s\n", request);
     reader_lock();
     int delay;
     for(i =0; i < counter; i++)
@@ -156,18 +164,26 @@ void * ContentChild(void * ptr)
     delay = delays[i].delay;
     reader_release();
     sleep(delay);
-    char * filename =strtok(NULL, " ");
     char data[1024];
-    int filedesc = open(filename, O_RDONLY);
+    int filedesc;
+
+    if( (filedesc= open(filename, O_RDONLY))==-1)
+    {
+      printf("%s\n", filename );
+      perror_exit("open");
+    }
     while((i = read(filedesc, data, 1024)) >0)
     {
-      printf("i is: %d\n",i );
+      //printf("i is: %d\n",i );
       send_data(socket, data, i);
     }
     printf("Sent file: %s\n", filename);
   }
 //  write_data(socket, "0");
   free(request);
+  free(request2);
+  request = NULL;
+  request2 = NULL;
   close(socket);
   pthread_detach(pthread_self());
   pthread_exit((void *)0);
