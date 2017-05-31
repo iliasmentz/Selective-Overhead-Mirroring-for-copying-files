@@ -44,16 +44,17 @@ void * mirrorManager(void *ptr)
   char * answer;
   read_data(sock, &answer);
   int count = atoi(answer);
-  printf("Answer is %s\n", answer );
+  //printf("Answer is %s\n", answer );
   free(answer);
   char ** list;
   list = malloc(count *sizeof(char*));
   int i;
   int serverbuffers =0;
-  printf("Dirrorfile: %s\n", cs->dirorfile);
+  //printf("Dirrorfile: %s\n", cs->dirorfile);
   for(i=0; i<count; i++)
   {
     read_data(sock, &list[i]);
+    //printf("%s\n", list[i] );
     if(strstr(list[i], cs->dirorfile)!=NULL)
       serverbuffers++;
   }

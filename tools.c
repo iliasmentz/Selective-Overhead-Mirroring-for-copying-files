@@ -21,9 +21,13 @@ char * copystring(char * string)
 int read_data (int fd, char ** string){/* Read formated data */
 	char temp[32];
 	int i = 0, length = 0;
-	if ( read ( fd, temp, 32 ) < 0 )	/* Get length of string */
+	int x;
+	if ( (x =read ( fd, temp, 32 )) < 0 )	/* Get length of string */
 		exit (-3);
+	else if(x==0)
+		return 0;
 	length = atoi(temp);
+	//printf("Length: %s %d\n", temp, length );
 	char * buffer;
 	*string= malloc(length*sizeof(length));
 	buffer = *string ;
@@ -37,6 +41,19 @@ int write_data ( int fd, char* message ){/* Write formated data */
 	char temp[32]; int length = 0;
 	memset(temp, '\0', 32);
 	length = strlen(message) + 1;	/* Find length of string */
+	sprintf(temp, "%d", length);
+
+	if( write (fd, temp, 32) < 0 )	/* Send length first */
+		exit (-2);
+	if( write (fd, message, length) < 0 )	/* Send string */
+		exit (-2);
+	return length;		/* Return size of string */
+}
+
+int send_data ( int fd, char* message, int length )
+{
+	char temp[32];
+	memset(temp, '\0', 32);
 	sprintf(temp, "%d", length);
 
 	if( write (fd, temp, 32) < 0 )	/* Send length first */
@@ -65,15 +82,20 @@ char * CreateFolder(char * foldername)
 	return foldername;
 }
 
-int  CreateOutputFile(int jobid, char * folder)
+int  CreateFile(char * path)
 {/*create and open the output file and return the file descriptor*/
-		char job_id[25];
-		sprintf(job_id, "%d", jobid);
-		char * outpath;
-		outpath = malloc((strlen(folder)+strlen(job_id)+strlen("/stdout_")+1)*sizeof(char));
-		sprintf(outpath, "%s/stdout_%s", folder, job_id);
+
 		int fd;
-		fd = open(outpath, O_APPEND|O_WRONLY|O_CREAT, 0666);
-		free(outpath);
+		fd = open(path, O_APPEND|O_WRONLY|O_CREAT, 0777);
 		return fd;
+}
+
+char* replace_char(char* str, char find, char replace)
+{
+    char *current_pos = strchr(str,find);
+    while (current_pos){
+        *current_pos = replace;
+        current_pos = strchr(current_pos,find);
+    }
+    return str;
 }

@@ -1,5 +1,5 @@
-SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c MirrorManager.c Worker.c ReaderWriter.c tools.c test.c DataStructures.c
-OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o MirrorManager.o Worker.o ReaderWriter.o tools.o test.o DataStructures.o
+SOURCE = ContentServer.c MirrorServer.c MirrorInitiator.c MirrorManager.c Worker.c ReaderWriter.c tools.c DataStructures.c
+OBJS = ContentServer.o MirrorServer.o MirrorInitiator.o MirrorManager.o Worker.o ReaderWriter.o tools.o DataStructures.o
 EXEC = ContentServer MirrorInitiator MirrorServer
 CC	= gcc
 FLAGS   = -g -c
@@ -41,4 +41,4 @@ tools.o: tools.c
 	$(CC) $(FLAGS) $?
 
 clean:
-	rm -f $(OBJS) $(EXEC) test
+	rm -f $(OBJS) $(EXEC)

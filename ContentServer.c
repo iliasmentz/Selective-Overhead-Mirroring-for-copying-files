@@ -7,6 +7,10 @@
 #include <sys/socket.h>			/* For sockets */
 #include <netinet/in.h>			/* For Internet sockets */
 #include <netdb.h>			/* For gethostbyname */
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "tools.h"
 #include "ContentServer.h"
@@ -94,7 +98,7 @@ void * ContentChild(void * ptr)
   socket = *(int *)ptr;
   char *request;
   read_data(socket, &request);
-  printf("%s\n", request );
+  //printf("%s\n", request );
   char * type = strtok(request, " ");
   if(strcmp(type, "LIST")==0)
   {
@@ -122,12 +126,14 @@ void * ContentChild(void * ptr)
     int count = 0;
     if(getline(&line, &len, temp)!=0)
       count =atoi(line);
-    printf("Count is %d \n", count);
+    //printf("Count is %d \n", count);
     write_data(socket, line);
     char * pos;
+    char * substring;
     while( getline(&line, &len, fp) !=-1)
     {
-      //printf("%s", line);
+      substring = strstr(line, dirorfile);
+      printf("%s", substring);
       if ((pos=strchr(line, '\n')) != NULL)
 	    		*pos = '\0';	//we don't want to include the \n in our strings
       write_data(socket, line);
@@ -149,10 +155,18 @@ void * ContentChild(void * ptr)
     }
     delay = delays[i].delay;
     reader_release();
-    char answer[32];
-    sprintf(answer, "Delay is %d", delay);
-    write_data(socket, answer);
+    sleep(delay);
+    char * filename =strtok(NULL, " ");
+    char data[1024];
+    int filedesc = open(filename, O_RDONLY);
+    while((i = read(filedesc, data, 1024)) >0)
+    {
+      printf("i is: %d\n",i );
+      send_data(socket, data, i);
+    }
+    printf("Sent file: %s\n", filename);
   }
+//  write_data(socket, "0");
   free(request);
   close(socket);
   pthread_detach(pthread_self());
