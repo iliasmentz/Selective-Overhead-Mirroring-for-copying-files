@@ -100,7 +100,7 @@ void * ContentChild(void * ptr)
   char *request2;
   read_data(socket, &request);
   request2 = copystring(request);
-  printf("%s\n", request2 );
+  //printf("%s\n", request2 );
   char * type = strtok(request2, " ");
   if(strcmp(type, "LIST")==0)
   {
@@ -152,8 +152,6 @@ void * ContentChild(void * ptr)
       perror_exit("strtok");
     }
     int id = atoi(strtok(NULL, " "));
-    if(filename == NULL)
-      printf("NULL sto %s\n", request);
     reader_lock();
     int delay;
     for(i =0; i < counter; i++)

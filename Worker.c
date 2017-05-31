@@ -23,7 +23,7 @@ void acquire_work(int haswork)
       pthread_mutex_unlock(&mutex);
       pthread_mutex_lock(&mutex2);
       workers_ended++;
-      printf("Workers: %d\n", workers_ended);
+      //printf("Workers: %d\n", workers_ended);
       if(workers_ended < w)
       {
         pthread_cond_wait(&allDone, &mutex2);
@@ -106,9 +106,16 @@ void * work (void *ptr)
       answer = NULL;
     }
 
-    BytesTransfered+=total;
     acquire_work(1);
+    if(dispersionsize == dispersioncounter)
+    {
+      dispersionsize*=2;
+      dispersion = realloc(dispersion, dispersionsize*sizeof(int));
+    }
+    BytesTransfered+=total;
     FilesTransfered++;
+    dispersion[dispersioncounter] = BytesTransfered;
+    dispersioncounter++;
     release_work();
 
     close(filedesc);

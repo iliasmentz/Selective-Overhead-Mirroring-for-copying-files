@@ -18,6 +18,9 @@ void read_args(int argc, char * argv[], int * port, char ** dirname, int * threa
 ServerBuffer * buffer[BUFFERSIZE];
 pthread_mutex_t mutex;
 pthread_mutex_t mutex2;
+int dispersionsize=128;
+int dispersioncounter=0;
+int *dispersion=NULL;
 int counter=0;
 int worker =0;
 int manager =0;
@@ -39,6 +42,7 @@ int main(int argc, char * argv[])
   int threadnum =-1;
 
   read_args(argc, argv, &port, &dirname, &threadnum);
+  dispersion = malloc(dispersionsize*sizeof(int));
   printf("%s \n", dirname );
   CreateFolder(dirname);
   w=threadnum;
@@ -116,11 +120,18 @@ int main(int argc, char * argv[])
     pthread_join(worker[i], 0);
   printf("Workers finished!\n" );
 
-  char answer[1024];
-  sprintf(answer, "%ld %lld", FilesTransfered, BytesTransfered);
+  double average = (double) BytesTransfered/ (double)FilesTransfered;
+  double var=0.0;
+  for(i=0; i<dispersioncounter; i++)
+    var += (double) ((dispersion[i]-average)*(dispersion[i]-average))/average;
+  char answer[3072];
+  memset(answer, '\0', 3072);
+  sprintf(answer, "%ld %lld %0.3f %0.3f", FilesTransfered, BytesTransfered, average, var);
+//  sprintf(answer, "%ld %lld", FilesTransfered, BytesTransfered);
   write_data(newsock, answer);
 
-  printf("Transfered %ld files and %lld bytes.\n", FilesTransfered, BytesTransfered );
+  printf("Transfered %ld files and %lld bytes. Average: %0.3f, Dispersion %0.3f\n", FilesTransfered, BytesTransfered, average, var );
+  free(dispersion);
   pthread_cond_destroy(&allDone);
   pthread_cond_destroy(&managers_cond);
   pthread_cond_destroy(&workers_cond);

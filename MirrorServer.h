@@ -22,6 +22,9 @@ extern int workers_ended;
 extern pthread_cond_t allDone;
 extern long long BytesTransfered;
 extern long FilesTransfered;
+extern int dispersionsize;
+extern int dispersioncounter;
+extern int *dispersion;
 
 void acquire_work(int);
 void release_work();
