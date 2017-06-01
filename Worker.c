@@ -19,11 +19,12 @@ void acquire_work(int haswork)
   {
     if((windowsmanagersfinished == m) && (counter==0) && !haswork)
     {
+      //printf("%d haswork%d counter:%d\n", windowsmanagersfinished, haswork,counter);
       pthread_cond_signal(&workers_cond);
       pthread_mutex_unlock(&mutex);
       pthread_mutex_lock(&mutex2);
       workers_ended++;
-      //printf("Workers: %d\n", workers_ended);
+      printf("Workers: %d\n", workers_ended);
       if(workers_ended < w)
       {
         pthread_cond_wait(&allDone, &mutex2);
@@ -87,9 +88,9 @@ void * work (void *ptr)
     message = malloc((strlen(temp->dirorfilename)+strlen(idstring)+8)*sizeof(char));
     sprintf(message, "FETCH %s %s", temp->dirorfilename, idstring);
     //printf("Sending %s\n", message );
-    temp->dirorfilename = replace_char(temp->dirorfilename, '/', '?');
+    //temp->dirorfilename = replace_char(temp->dirorfilename, '/', '?');
     char * filename;
-    filename = malloc((strlen(temp->dirorfilename)+strlen(dirname)+2)*sizeof(char));
+    filename = malloc((strlen(temp->dirorfilename)+strlen(dirname)+3)*sizeof(char));
     sprintf(filename, "%s/%s", dirname, temp->dirorfilename);
     int filedesc = CreateFile(filename);
     free(filename);

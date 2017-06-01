@@ -77,22 +77,63 @@ void perror_exit(char *message)
 
 char * CreateFolder(char * foldername)
 {
-	struct tm *info;
-
+  struct tm *info;
+	char * path;
+	path = copystring(foldername);
+	char * folder;
+	char * previous;
+	previous = malloc((strlen(foldername)+1)*sizeof(char));
+	folder = malloc((strlen(foldername)+1)*sizeof(char));
 	struct stat st = {0};
 	/*check if the folder already exists*/
-	if (stat(foldername, &st) == -1) {
-			/*create the folder*/
-			mkdir(foldername, 0777);
+	char * local;
+	local = strtok_r(path, "/", &path);
+	if (local ==NULL)
+	{
+		free(path);
+		free(folder);
+		free(previous);
+		if (stat(foldername, &st) == -1) {
+				/*create the folder*/
+				mkdir(foldername, 0777);
+				printf("created %s\n", foldername );
+		}
+		return foldername;
 	}
+  if (stat(local, &st) == -1) {
+      /*create the folder*/
+      mkdir(local, 0777);
+  }
+  strcpy(folder, local);
+	while((local = strtok_r(path, "/", &path))!=NULL)
+	{
+		strcpy(previous, folder);
+		sprintf(folder, "%s/%s", previous, local);
+		if (stat(folder, &st) == -1) {
+				/*create the folder*/
+				mkdir(folder, 0777);
+		}
+	}
+	//free(path);
+	free(folder);
+	free(previous);
+
 	return foldername;
 }
 
-int  CreateFile(char * path)
+int  CreateFile(char * fullpath)
 {/*create and open the output file and return the file descriptor*/
 
 		int fd;
-		fd = open(path, O_APPEND|O_WRONLY|O_CREAT|O_TRUNC, 0777);
+		char *last = strrchr(fullpath, '/');
+		char * path = copystring(fullpath);
+		removeSubstring(path, last);
+		CreateFolder(path);
+		if((fd = open(fullpath, O_APPEND|O_WRONLY|O_CREAT|O_TRUNC, 0777))==-1)
+		{
+			printf("%s\n", fullpath);
+			perror_exit("open");
+		}
 		return fd;
 }
 

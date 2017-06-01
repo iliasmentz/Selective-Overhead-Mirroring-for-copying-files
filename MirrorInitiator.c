@@ -54,7 +54,11 @@ int main(int argc, char * argv[])
     write_data(sock, ContentServers[i]);
 
   char * answer;
-  read_data(sock, &answer);
+  if(read_data(sock, &answer)==0)
+  {
+    printf("Connection Failed\n" );
+    exit(EXIT_FAILURE);
+  }
   long FilesTransfered = atoi(strtok(answer, " "));
   long long BytesTransfered = atoi(strtok(NULL, " "));
   printf("FilesTransfered %ld, BytesTransfered %lld\n", FilesTransfered, BytesTransfered );
