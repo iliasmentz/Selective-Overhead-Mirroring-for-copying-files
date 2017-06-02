@@ -16,6 +16,7 @@ void * mirrorManager(void *ptr)
 {
   ContentServer * cs = (ContentServer *)ptr;
 
+  /*connection as client*/
   int sock;
   unsigned int serverlen;
   struct sockaddr_in server;
@@ -37,28 +38,30 @@ void * mirrorManager(void *ptr)
     perror_exit("connect");
   }
 
+  /*send the LIST request*/
   char localbuffer[127];
   sprintf(localbuffer, "LIST %d %d", cs->id,cs->delay);
   write_data(sock, localbuffer);
-
+  /*how many lines the response is gonna be*/
   char * answer;
   read_data(sock, &answer);
   int count = atoi(answer);
-  //printf("Answer is %s\n", answer );
   free(answer);
+
+  /*read all the files that the Content Servers LIST and count those we need*/
   char ** list;
   list = malloc(count *sizeof(char*));
   int i;
   int serverbuffers =0;
-  //printf("Dirrorfile: %s\n", cs->dirorfile);
   for(i=0; i<count; i++)
   {
     read_data(sock, &list[i]);
-    //printf("%s\n", list[i] );
     if(strstr(list[i], cs->dirorfile)!=NULL)
       serverbuffers++;
   }
   printf("I will take %d items from %s %s\n", serverbuffers, cs->Address, cs->dirorfile);
+
+  /* find the files that we need in the LIST response*/
   int j=0;
   ServerBuffer ** sb;
   sb = malloc(serverbuffers*sizeof(ServerBuffer*));
@@ -78,18 +81,17 @@ void * mirrorManager(void *ptr)
   /*connection, send request*/
   for(i=0 ; i<serverbuffers ; i++)
   {
+    /*write one-by-one of the list results in the buffer*/
     acquire_manager();
     buffer[counter] = sb[i];
     counter++;
-    //printf("dirorfile %s, address %s, port %d \n", sb[i]->dirorfilename, sb[i]->ContentServerAddress, sb[i]->port);
-    //printf("Wrote on buffer\n" );
-    //printf("Buffer size is: %d\n", counter );
     release_manager();
   }
 
   acquire_manager();
   windowsmanagersfinished++;
   release_manager();
+  /*release the program's sources*/
   deleteContentServer(cs);
   free(sb);
   pthread_exit((void *)0);

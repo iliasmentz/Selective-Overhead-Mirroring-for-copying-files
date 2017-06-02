@@ -17,14 +17,13 @@ void acquire_work(int haswork)
   pthread_mutex_lock(&mutex);
   while(worker || manager || (counter == 0) )
   {
-    if((windowsmanagersfinished == m) && (counter==0) && !haswork)
+    if((windowsmanagersfinished == m) && (counter==0) && (!haswork))
     {
       //printf("%d haswork%d counter:%d\n", windowsmanagersfinished, haswork,counter);
       pthread_cond_signal(&workers_cond);
       pthread_mutex_unlock(&mutex);
       pthread_mutex_lock(&mutex2);
       workers_ended++;
-      printf("Workers: %d\n", workers_ended);
       if(workers_ended < w)
       {
         pthread_cond_wait(&allDone, &mutex2);
@@ -52,7 +51,7 @@ void release_work()
 
 void * work (void *ptr)
 {
-  while(windowsmanagersfinished<m || counter!=0)
+  while(1)
   {
     acquire_work(0);
     counter--;
@@ -88,13 +87,16 @@ void * work (void *ptr)
     message = malloc((strlen(temp->dirorfilename)+strlen(idstring)+8)*sizeof(char));
     sprintf(message, "FETCH %s %s", temp->dirorfilename, idstring);
     //printf("Sending %s\n", message );
-    //temp->dirorfilename = replace_char(temp->dirorfilename, '/', '?');
+
+    /*create the file and the folders that it belongs*/
     char * filename;
-    filename = malloc((strlen(temp->dirorfilename)+strlen(dirname)+3)*sizeof(char));
-    sprintf(filename, "%s/%s", dirname, temp->dirorfilename);
+    filename = malloc((strlen(temp->ContentServerAddress)+strlen(temp->dirorfilename)+strlen(dirname)+4+strlen(idstring))*sizeof(char));
+    sprintf(filename, "%s/%s:%s/%s", dirname, temp->ContentServerAddress, idstring, temp->dirorfilename);
     int filedesc = CreateFile(filename);
     free(filename);
     write_data(sock, message);
+
+    /*write the data to the file*/
     char * answer;
     int  total =0;
     int i;
@@ -107,6 +109,7 @@ void * work (void *ptr)
       answer = NULL;
     }
 
+    /*write the files stats in order to create the metrics*/
     acquire_work(1);
     if(dispersionsize == dispersioncounter)
     {
@@ -119,6 +122,7 @@ void * work (void *ptr)
     dispersioncounter++;
     release_work();
 
+    /*release the program's sources*/
     close(filedesc);
     close(sock);
     free(message);
@@ -126,5 +130,5 @@ void * work (void *ptr)
     free(temp);
     temp = NULL;
   }
-  pthread_exit((void *)0);
+  pthread_exit((void *)0); /*never gonna get there, but just in case :D */
 }

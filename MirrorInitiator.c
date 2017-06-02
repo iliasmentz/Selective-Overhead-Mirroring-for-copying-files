@@ -61,7 +61,13 @@ int main(int argc, char * argv[])
   }
   long FilesTransfered = atoi(strtok(answer, " "));
   long long BytesTransfered = atoi(strtok(NULL, " "));
+  double average = strtod(strtok(NULL, " "), NULL);
+  double dispersion =strtod(strtok(NULL, " "), NULL);
   printf("FilesTransfered %ld, BytesTransfered %lld\n", FilesTransfered, BytesTransfered );
+  printf("Average is %.3f Bytes/file\n", average);
+  printf("Dispersion is %.3f\n", dispersion);
+
+  /*release the program's sources*/
   free(answer);
   for(i=0; i< count; i++)
   {

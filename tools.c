@@ -15,7 +15,6 @@ char * copystring(char * string)
 	s = malloc((strlen(string)+1)*sizeof(char));
 	strcpy(s, string);
 	return s;
-
 }
 
 void removeSubstring(char *s,const char *toremove)
@@ -24,7 +23,7 @@ void removeSubstring(char *s,const char *toremove)
     memmove(s,s+strlen(toremove),1+strlen(s+strlen(toremove)));
 }
 
-int read_data (int fd, char ** string){/* Read formated data */
+int read_data (int fd, char ** string){/* Read data */
 	char temp[32];
 	int i = 0, length = 0;
 	int x;
@@ -57,7 +56,7 @@ int write_data ( int fd, char* message ){/* Write formated data */
 }
 
 int send_data ( int fd, char* message, int length )
-{
+{/*this function can send bytes too*/
 	char temp[32];
 	memset(temp, '\0', 32);
 	sprintf(temp, "%d", length);
@@ -77,6 +76,7 @@ void perror_exit(char *message)
 
 char * CreateFolder(char * foldername)
 {
+	/*takes a path and creates all the folders that should exist*/
   struct tm *info;
 	char * path;
 	path = copystring(foldername);
@@ -85,7 +85,6 @@ char * CreateFolder(char * foldername)
 	previous = malloc((strlen(foldername)+1)*sizeof(char));
 	folder = malloc((strlen(foldername)+1)*sizeof(char));
 	struct stat st = {0};
-	/*check if the folder already exists*/
 	char * local;
 	local = strtok_r(path, "/", &path);
 	if (local ==NULL)
@@ -93,6 +92,7 @@ char * CreateFolder(char * foldername)
 		free(path);
 		free(folder);
 		free(previous);
+		/*check if the folder already exists*/
 		if (stat(foldername, &st) == -1) {
 				/*create the folder*/
 				mkdir(foldername, 0777);
@@ -114,7 +114,6 @@ char * CreateFolder(char * foldername)
 				mkdir(folder, 0777);
 		}
 	}
-	//free(path);
 	free(folder);
 	free(previous);
 
@@ -134,15 +133,6 @@ int  CreateFile(char * fullpath)
 			printf("%s\n", fullpath);
 			perror_exit("open");
 		}
+		free(path);
 		return fd;
-}
-
-char* replace_char(char* str, char find, char replace)
-{
-    char *current_pos = strchr(str,find);
-    while (current_pos){
-        *current_pos = replace;
-        current_pos = strchr(current_pos,find);
-    }
-    return str;
 }

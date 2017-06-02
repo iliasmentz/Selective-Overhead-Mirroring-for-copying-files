@@ -33,10 +33,7 @@ pthread_cond_t writers_cond;
 
 int main(int argc, char * argv[])
 {
-  int * connections;
   int i=0;
-  connections = malloc(256*sizeof(int));
-  int size = 256;
   int port=-1;
 
   delays = malloc(buffersize*sizeof(delayID));
@@ -73,21 +70,17 @@ int main(int argc, char * argv[])
   clientptr = (struct sockaddr *) &client;
   clientlen = sizeof(client);
   pthread_t service;
+  int * connection;
   while((newsock = accept(sock, clientptr, &clientlen)) != -1){
-    connections[i] = newsock;
-    pthread_create(&service, 0, ContentChild, &connections[i]);
+    connection = malloc(sizeof(int));
+    *connection = newsock;
+    pthread_create(&service, 0, ContentChild, connection);
     //close(newsock);
-    i++;
-    if (i == size)
-    {
-      size*=2;
-      connections = realloc(connections, size*sizeof(int));
-    }
+
   }
   pthread_cond_destroy(&writers_cond);
   pthread_cond_destroy(&readers_cond);
   pthread_mutex_destroy(&mutex);
-  free(connections);
   free(dirorfile);
   exit(EXIT_SUCCESS);
 }
@@ -96,6 +89,7 @@ void * ContentChild(void * ptr)
 {
   int socket;
   socket = *(int *)ptr;
+  free(ptr);
   char *request;
   char *request2;
   read_data(socket, &request);
