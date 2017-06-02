@@ -46,6 +46,7 @@ int main(int argc, char * argv[])
   pthread_cond_init(&writers_cond, 0);
   pthread_cond_init(&readers_cond, 0);
 
+  /*connection as server*/
   unsigned int serverlen, clientlen;	/* Server - client variables */
 	struct sockaddr_in server, client;
 	struct sockaddr *serverptr, *clientptr;
@@ -72,12 +73,14 @@ int main(int argc, char * argv[])
   pthread_t service;
   int * connection;
   while((newsock = accept(sock, clientptr, &clientlen)) != -1){
+    /*when ever it gets a new client, creates a thread service */
     connection = malloc(sizeof(int));
     *connection = newsock;
     pthread_create(&service, 0, ContentChild, connection);
     //close(newsock);
 
   }
+  /*release the sources*/
   pthread_cond_destroy(&writers_cond);
   pthread_cond_destroy(&readers_cond);
   pthread_mutex_destroy(&mutex);
@@ -86,19 +89,21 @@ int main(int argc, char * argv[])
 }
 
 void * ContentChild(void * ptr)
-{
+{ /*service of the ContentServer*/
   int socket;
   socket = *(int *)ptr;
   free(ptr);
+
   char *request;
   char *request2;
   read_data(socket, &request);
   request2 = copystring(request);
   //printf("%s\n", request2 );
+  /*check the type of the request*/
   char * type = strtok(request2, " ");
   if(strcmp(type, "LIST")==0)
   {
-
+    /*add the new id in the delayID table*/
     writer_lock();
     if (buffersize == counter)
     {
@@ -112,9 +117,11 @@ void * ContentChild(void * ptr)
 
     char command [1024];
     char command2 [1024];
+    /*get the LIST request*/
     sprintf(command, "find %s -type f", dirorfile);
     FILE * fp, *temp;
     fp = popen(command, "r");
+    /*count its size*/
     sprintf(command2, "%s | wc -l", command);
     temp = popen(command2, "r");
     char *line = NULL;
@@ -123,6 +130,7 @@ void * ContentChild(void * ptr)
     if(getline(&line, &len, temp)!=0)
       count =atoi(line);
     //printf("Count is %d \n", count);
+    /*send it to the client*/
     write_data(socket, line);
     char * pos;
     char * substring;
@@ -141,11 +149,14 @@ void * ContentChild(void * ptr)
   else if(strcmp(type, "FETCH")==0)
   {
     int i;
+    /*get the data from the request*/
     char * filename;
     if((filename=strtok(NULL, " ")) == NULL){
       perror_exit("strtok");
     }
     int id = atoi(strtok(NULL, " "));
+
+    /*get the delay based on the ID*/
     reader_lock();
     int delay;
     for(i =0; i < counter; i++)
@@ -155,15 +166,17 @@ void * ContentChild(void * ptr)
     }
     delay = delays[i].delay;
     reader_release();
+
     sleep(delay);
     char data[1024];
     int filedesc;
-
+    /*open the file*/
     if( (filedesc= open(filename, O_RDONLY))==-1)
     {
       printf("%s\n", filename );
       perror_exit("open");
     }
+    /*send it until we get to the end*/
     while((i = read(filedesc, data, 1024)) >0)
     {
       //printf("i is: %d\n",i );

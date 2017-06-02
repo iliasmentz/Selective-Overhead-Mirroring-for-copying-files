@@ -5,6 +5,9 @@
 
 #include "ContentServer.h"
 
+/*reader - writer thread sychronization for the delaysID*/
+
+
 void reader_lock()
 {
   pthread_mutex_lock(&mutex);

@@ -14,16 +14,19 @@
 
 void acquire_work(int haswork)
 {
+  /*has work means that the thread needs to acquire the cs
+  in order to finish the ongoing request from his side*/
   pthread_mutex_lock(&mutex);
   while(worker || manager || (counter == 0) )
   {
     if((windowsmanagersfinished == m) && (counter==0) && (!haswork))
     {
-      //printf("%d haswork%d counter:%d\n", windowsmanagersfinished, haswork,counter);
+      /*if all the Fetching work is done, go to the allDone cond var*/
       pthread_cond_signal(&workers_cond);
       pthread_mutex_unlock(&mutex);
       pthread_mutex_lock(&mutex2);
       workers_ended++;
+      /*if you are not last you sleep*/
       if(workers_ended < w)
       {
         pthread_cond_wait(&allDone, &mutex2);
@@ -53,6 +56,7 @@ void * work (void *ptr)
 {
   while(1)
   {
+    /*get file to transfer from the critical section*/
     acquire_work(0);
     counter--;
     ServerBuffer * temp = buffer[counter];
@@ -61,6 +65,7 @@ void * work (void *ptr)
     //printf("Buffer size is: %d\n", counter );
     release_work();
 
+    /*connection as client*/
     int sock;
     unsigned int serverlen;
     struct sockaddr_in server;
@@ -81,6 +86,8 @@ void * work (void *ptr)
     if (connect(sock, serverptr, serverlen) < 0){
       perror_exit("connect");
     }
+
+    /*sending FETCH request*/
     char * message;
     char idstring[32];
     sprintf(idstring, "%d", temp->id);

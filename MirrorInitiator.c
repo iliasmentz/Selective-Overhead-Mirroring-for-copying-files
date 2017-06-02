@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
   printf("Count = %d \n", count);
   for(i=0; i<count; i++)
     printf("Content Server %d: %s \n", i, ContentServers[i]);
-
+  /*connect as client */
   int sock;
   unsigned int serverlen;
   struct sockaddr_in server;
@@ -47,18 +47,22 @@ int main(int argc, char * argv[])
     perror_exit("connect");
   }
 
+  /*send the number of ContentServers and then their details*/
   char buffer[100];
   sprintf(buffer,"%d", count);
   write_data(sock, buffer);
   for(i=0; i<count; i++)
     write_data(sock, ContentServers[i]);
 
+  /*wait for answer from MirrorServer*/
   char * answer;
   if(read_data(sock, &answer)==0)
   {
     printf("Connection Failed\n" );
     exit(EXIT_FAILURE);
   }
+
+  /* parse and print the answer */
   long FilesTransfered = atoi(strtok(answer, " "));
   long long BytesTransfered = atoi(strtok(NULL, " "));
   double average = strtod(strtok(NULL, " "), NULL);
