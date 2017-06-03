@@ -75,8 +75,8 @@ void * work (void *ptr)
     if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0){
       perror_exit("socket");
     }
-    if ((rem = gethostbyname(temp->ContentServerAddress)) == NULL){	/* Find server address */
-      perror_exit("gethostbyname");
+    if ((rem = find_hostent(temp->ContentServerAddress)) == NULL){	/* Find server address */
+      perror_exit("Couldn't find host");
     }
     server.sin_family = AF_INET;
     bcopy((char *) rem -> h_addr, (char *) &server.sin_addr, rem -> h_length);

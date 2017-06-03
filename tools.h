@@ -10,6 +10,6 @@ int send_data ( int fd, char* message, int length );
 char * CreateFolder(char * foldername);
 int CreateFile(char * path);
 char* replace_char(char* str, char find, char replace);
-
+struct hostent* find_hostent(char* host);
 
 #endif

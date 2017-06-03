@@ -6,6 +6,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 
 #include "tools.h"
 
@@ -21,6 +26,29 @@ void removeSubstring(char *s,const char *toremove)
 {
   while( s=strstr(s,toremove) )
     memmove(s,s+strlen(toremove),1+strlen(s+strlen(toremove)));
+}
+
+struct hostent* find_hostent(char* host)
+{
+    int ip=1;
+    int i;
+		/*check if ip was given or host name*/
+    for (i = 0; i < strlen(host); i++)
+		{
+			/*are the input valid for ip? */
+        if(!(host[i]=='.') && !(host[i]>='0' && host[i]<='9') )
+				{
+					ip=0;
+					break;
+        }
+    }
+    if(ip==0){
+        return gethostbyname(host);
+    }else{
+        struct sockaddr_in sa;
+        inet_aton(host,(struct in_addr*)&sa);
+        return gethostbyaddr(&sa, sizeof(sa), AF_INET);
+    }
 }
 
 int read_data (int fd, char ** string){/* Read data */
